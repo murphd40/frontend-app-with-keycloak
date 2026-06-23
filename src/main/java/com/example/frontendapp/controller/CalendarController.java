@@ -1,10 +1,8 @@
 package com.example.frontendapp.controller;
 
-import java.util.Calendar;
-import java.util.Locale;
-
-import lombok.Value;
-
+import com.example.frontendapp.model.Day;
+import com.example.frontendapp.model.Month;
+import com.example.frontendapp.service.CalendarService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,26 +13,19 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasAuthority('my-role')")
 public class CalendarController {
 
-    @Value
-    public static class Day {
-        int day;
-        String dayName;
-        int month;
-        String monthName;
-        int year;
-    }
+  private final CalendarService calendarService;
 
-    @GetMapping("today")
-    public Day today() {
-        Calendar calendar = Calendar.getInstance();
+  public CalendarController(CalendarService calendarService) {
+    this.calendarService = calendarService;
+  }
 
-        return new Day(
-                calendar.get(Calendar.DAY_OF_MONTH),
-                calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.UK),
-                calendar.get(Calendar.MONTH),
-                calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.UK),
-                calendar.get(Calendar.YEAR)
-        );
-    }
+  @GetMapping("today")
+  public Day today() {
+    return calendarService.today();
+  }
 
+  @GetMapping("thisMonth")
+  public Month thisMonth() {
+    return calendarService.thisMonth();
+  }
 }
