@@ -85,6 +85,39 @@
             border-bottom: none;
             padding-bottom: 0;
         }
+        .token-claims-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        .token-claims-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .json-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .json-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #333;
+        }
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -112,9 +145,122 @@
         </div>
         
         <div class="links-section">
+            <h2>Calendar API</h2>
+            <button onclick="callTodayEndpoint()" class="api-link" style="border: none; cursor: pointer;">
+                Get Today's Date (Requires 'my-role' role)
+            </button>
+            <div id="todayResult" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; display: none;">
+                <strong>Result:</strong>
+                <pre id="todayContent" style="margin-top: 10px; white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+            <button onclick="callThisMonthEndpoint()" class="api-link" style="border: none; cursor: pointer; margin-top: 10px;">
+                Get This Month (Requires 'my-role' role and 2FA)
+            </button>
+            <div id="thisMonthResult" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; display: none;">
+                <strong>Result:</strong>
+                <pre id="thisMonthContent" style="margin-top: 10px; white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+        </div>
+        
+        <div class="links-section">
             <h2>API Documentation</h2>
             <a href="/swagger-ui.html" class="api-link" target="_blank">View Swagger UI</a>
         </div>
+        
+        <div class="token-claims-section">
+            <h2>ID Token Claims</h2>
+            <div class="json-container">
+                <pre id="tokenClaims" class="json-content loading">Loading token claims...</pre>
+            </div>
+        </div>
     </div>
+    
+    <script>
+        // Fetch and display ID token claims
+        async function loadTokenClaims() {
+            const tokenClaimsElement = document.getElementById('tokenClaims');
+            
+            try {
+                const response = await fetch('/token/idToken');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const claims = await response.json();
+                
+                // Format JSON with indentation for better readability
+                tokenClaimsElement.textContent = JSON.stringify(claims, null, 2);
+                tokenClaimsElement.classList.remove('loading');
+            } catch (error) {
+                tokenClaimsElement.textContent = `Error loading token claims: ${error.message}`;
+                tokenClaimsElement.classList.remove('loading');
+                tokenClaimsElement.classList.add('error');
+            }
+        }
+        
+        // Call the calendar/today endpoint
+        async function callTodayEndpoint() {
+            const resultDiv = document.getElementById('todayResult');
+            const contentPre = document.getElementById('todayContent');
+            
+            resultDiv.style.display = 'block';
+            contentPre.textContent = 'Loading...';
+            contentPre.style.color = '#007bff';
+            
+            try {
+                const response = await fetch('/calendar/today');
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        throw new Error('Access Denied: You do not have the required "my-role" role');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Format JSON with indentation for better readability
+                contentPre.textContent = JSON.stringify(data, null, 2);
+                contentPre.style.color = '#333';
+            } catch (error) {
+                contentPre.textContent = `Error: ${error.message}`;
+                contentPre.style.color = '#dc3545';
+            }
+        }
+        
+        // Call the calendar/thisMonth endpoint
+        async function callThisMonthEndpoint() {
+            const resultDiv = document.getElementById('thisMonthResult');
+            const contentPre = document.getElementById('thisMonthContent');
+            
+            resultDiv.style.display = 'block';
+            contentPre.textContent = 'Loading...';
+            contentPre.style.color = '#007bff';
+            
+            try {
+                const response = await fetch('/calendar/thisMonth');
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        throw new Error('Access Denied: You do not have the required "my-role" role and/or 2FA is not enabled');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Format JSON with indentation for better readability
+                contentPre.textContent = JSON.stringify(data, null, 2);
+                contentPre.style.color = '#333';
+            } catch (error) {
+                contentPre.textContent = `Error: ${error.message}`;
+                contentPre.style.color = '#dc3545';
+            }
+        }
+        
+        // Load token claims when page loads
+        document.addEventListener('DOMContentLoaded', loadTokenClaims);
+    </script>
 </body>
 </html>

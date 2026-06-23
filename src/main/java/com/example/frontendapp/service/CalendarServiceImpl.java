@@ -17,7 +17,7 @@ public class CalendarServiceImpl implements CalendarService {
     return new Day(
         calendar.get(Calendar.DAY_OF_MONTH),
         calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.UK),
-        calendar.get(Calendar.MONTH),
+        getMonthNumber(calendar),
         calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.UK),
         calendar.get(Calendar.YEAR));
   }
@@ -27,7 +27,7 @@ public class CalendarServiceImpl implements CalendarService {
     Calendar calendar = Calendar.getInstance();
 
     int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-    int month = calendar.get(Calendar.MONTH);
+    int month = getMonthNumber(calendar);
     String monthName = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.UK);
     int year = calendar.get(Calendar.YEAR);
 
@@ -44,5 +44,13 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     return new Month(currentDay, month, monthName, year, daysOfMonth);
+  }
+
+  /**
+   * Return an integer representing the current month [1-12]
+   */
+  private static int getMonthNumber(Calendar calendar) {
+    // Calendar.MONTH is 0-based so add 1
+    return calendar.get(Calendar.MONTH) + 1;
   }
 }
